@@ -124,3 +124,40 @@ void addNewMovie(Movie movie) async {
     client.close();
   }
 }
+
+void updateMovie(Movie movie) async {
+  var client = http.Client();
+  print(movie.toJson());
+  try {
+    final response = await client.put(
+      'https://imdbadatabazisok.azurewebsites.net/api/Movies/${movie.filmId}',
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{
+        "film_id": 0,
+        "kategoria": "${movie.kategoria}",
+        "ertekeles": movie.ertekeles,
+        "szinesz": "${movie.szinesz}",
+        "nev": movie.nev,
+        "leiras": movie.leiras,
+        "boritoKepURL": movie.boritoKepUrl,
+        "filmKepek": movie.filmKepek
+      }),
+    );
+    print(response.statusCode);
+  } finally {
+    client.close();
+  }
+}
+
+void deleteMovie(Movie movie) async {
+  var client = http.Client();
+  try {
+    await client.delete(
+      'https://imdbadatabazisok.azurewebsites.net/api/Movies/${movie.filmId}',
+    );
+  } finally {
+    client.close();
+  }
+}

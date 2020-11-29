@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_netflix_ui_redesign/models/movie_model.dart';
+import 'package:flutter_netflix_ui_redesign/screens/new_movie_screen.dart';
 import 'package:flutter_netflix_ui_redesign/widgets/circular_clipper.dart';
 import 'package:flutter_netflix_ui_redesign/widgets/content_scroll.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'dart:html' as html;
 
 class MovieScreen extends StatefulWidget {
   final Movie movie;
@@ -13,6 +16,37 @@ class MovieScreen extends StatefulWidget {
 }
 
 class _MovieScreenState extends State<MovieScreen> {
+  Future<void> _showDialog(Movie movie) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // u// ser must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Biztos szeretnéd törölni a következő filmet?'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(movie.nev),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Törlés'),
+              onPressed: () {
+                deleteMovie(movie);
+                Future.delayed(Duration(milliseconds: 500), () {
+                  Navigator.of(context).pop();
+                  html.window.location.reload();
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,11 +81,6 @@ class _MovieScreenState extends State<MovieScreen> {
                     iconSize: 30.0,
                     color: Colors.white,
                   ),
-                  Image(
-                    image: AssetImage('assets/images/netflix_logo.png'),
-                    height: 60.0,
-                    width: 150.0,
-                  ),
                 ],
               ),
               Positioned.fill(
@@ -61,13 +90,27 @@ class _MovieScreenState extends State<MovieScreen> {
                   child: RawMaterialButton(
                     padding: EdgeInsets.all(10.0),
                     elevation: 12.0,
-                    onPressed: () => print('Play Video'),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          fullscreenDialog: true,
+                          builder: (_) => NewMovieScreen(
+                            movie: widget.movie,
+                          ),
+                        ),
+                      );
+                    },
                     shape: CircleBorder(),
                     fillColor: Colors.white,
-                    child: Icon(
-                      Icons.delete,
-                      size: 60.0,
-                      color: Colors.red,
+                    child: SizedBox(
+                      height: 60,
+                      width: 60,
+                      child: Icon(
+                        FontAwesomeIcons.userEdit,
+                        size: 40,
+                        color: Colors.orange,
+                      ),
                     ),
                   ),
                 ),
@@ -145,6 +188,27 @@ class _MovieScreenState extends State<MovieScreen> {
             title: 'Screenshots',
             imageHeight: 200.0,
             imageWidth: 250.0,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 200),
+            child: SizedBox(
+              child: FlatButton(
+                height: 50,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                color: Colors.redAccent,
+                textColor: Colors.white,
+                onPressed: () => _showDialog(widget.movie),
+                child: Text(
+                  'Törlés',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),

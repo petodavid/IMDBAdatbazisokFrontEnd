@@ -106,7 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
           context,
           MaterialPageRoute(
             fullscreenDialog: true,
-            builder: (_) => NewMovieScreen(),
+            builder: (_) => NewMovieScreen(
+              movie: null,
+            ),
           ),
         ),
       ),

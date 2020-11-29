@@ -7,6 +7,12 @@ import 'package:string_validator/string_validator.dart';
 import 'dart:html' as html;
 
 class NewMovieScreen extends StatefulWidget {
+  final Movie movie;
+
+  NewMovieScreen({
+    this.movie,
+  });
+
   @override
   _NewMovieScreenState createState() => _NewMovieScreenState();
 }
@@ -25,6 +31,33 @@ class _NewMovieScreenState extends State<NewMovieScreen> {
   TextEditingController screen3Controller = TextEditingController();
   TextEditingController screen4Controller = TextEditingController();
   TextEditingController screen5Controller = TextEditingController();
+
+  initState() {
+    if (widget.movie == null) {
+      return;
+    }
+    final movie = widget.movie;
+    movieNameController.text = movie.nev;
+    movieDescriptionController.text = movie.leiras;
+    movieCoverURLController.text = movie.boritoKepUrl;
+    movieRatingController.text = movie.ertekeles.toString();
+    try {
+      screen1Controller.text = movie.filmKepek[0].kepUrl;
+    } catch (e) {}
+    try {
+      screen2Controller.text = movie.filmKepek[1].kepUrl;
+    } catch (e) {}
+    try {
+      screen3Controller.text = movie.filmKepek[2].kepUrl;
+    } catch (e) {}
+    try {
+      screen4Controller.text = movie.filmKepek[3].kepUrl;
+    } catch (e) {}
+    try {
+      screen5Controller.text = movie.filmKepek[4].kepUrl;
+    } catch (e) {}
+    super.initState();
+  }
 
   List<FilmKepek> getSelectedFilmKepek() {
     List<FilmKepek> result = [];
@@ -61,16 +94,22 @@ class _NewMovieScreenState extends State<NewMovieScreen> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('Biztos hozzászeretnéd adni a következő filmet?'),
+                Text(widget.movie == null
+                    ? 'Biztos hozzászeretnéd adni a következő filmet?'
+                    : 'Biztos  módositani szeretnéd a következő filmet?'),
                 Text(movie.nev),
               ],
             ),
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Felvétel'),
+              child: Text(widget.movie == null ? 'Hozzáadás' : 'Módositás'),
               onPressed: () {
-                addNewMovie(movie);
+                if (widget.movie == null) {
+                  addNewMovie(movie);
+                } else {
+                  updateMovie(movie);
+                }
                 Future.delayed(Duration(milliseconds: 500), () {
                   Navigator.of(context).pop();
                   html.window.location.reload();
@@ -94,17 +133,27 @@ class _NewMovieScreenState extends State<NewMovieScreen> {
           FloatingActionButton.extended(
             label: Row(
               children: [
-                Icon(FontAwesomeIcons.plus),
+                Icon(
+                  widget.movie == null
+                      ? FontAwesomeIcons.plus
+                      : FontAwesomeIcons.solidSave,
+                ),
                 SizedBox(
                   width: 10,
                 ),
-                Text('Hozzáadás'),
+                Text(
+                  widget.movie == null ? 'Hozzáadás' : 'Mentés',
+                ),
               ],
             ),
             onPressed: () {
               if (_formKey.currentState.validate()) {
+                int id = 0;
+                if (widget.movie != null) {
+                  id = widget.movie.filmId;
+                }
                 final newMovie = Movie(
-                  filmId: 0,
+                  filmId: id,
                   nev: movieNameController.text,
                   leiras: movieDescriptionController.text,
                   boritoKepUrl: movieCoverURLController.text,
@@ -120,7 +169,9 @@ class _NewMovieScreenState extends State<NewMovieScreen> {
         ],
       ),
       appBar: AppBar(
-        title: Text('Új film hozzáadása'),
+        title: Text(
+          widget.movie == null ? 'Új film hozzáadása' : widget.movie.nev,
+        ),
       ),
       body: FutureBuilder(
         future: getActors(),
@@ -134,7 +185,16 @@ class _NewMovieScreenState extends State<NewMovieScreen> {
                     AsyncSnapshot<List<Genre>> genreSnapshot) {
                   if (genreSnapshot.hasData) {
                     final genres = genreSnapshot.data;
-
+                    if (widget.movie != null) {
+                      selectedGenreId = genres
+                          .firstWhere((element) =>
+                              element.kategoriaNev == widget.movie.kategoria)
+                          .kategoriaId;
+                      selectedActorId = actors
+                          .firstWhere(
+                              (element) => element.neve == widget.movie.szinesz)
+                          .szineszId;
+                    }
                     return SingleChildScrollView(
                       child: Padding(
                         padding: const EdgeInsets.all(56),
@@ -150,7 +210,9 @@ class _NewMovieScreenState extends State<NewMovieScreen> {
                                   labelText: 'Film neve',
                                 ),
                                 validator: (value) {
-                                  return isAlpha(value) ? null : 'Hibás név';
+                                  return value.trim().isNotEmpty
+                                      ? null
+                                      : 'Hibás név';
                                 },
                               ),
                               TextFormField(
@@ -161,7 +223,9 @@ class _NewMovieScreenState extends State<NewMovieScreen> {
                                   labelText: 'Film leirasa',
                                 ),
                                 validator: (value) {
-                                  return isAlpha(value) ? null : 'Hibás leiras';
+                                  return value.trim().isNotEmpty
+                                      ? null
+                                      : 'Hibás leiras';
                                 },
                               ),
                               TextFormField(
